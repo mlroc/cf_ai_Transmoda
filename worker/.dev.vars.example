@@ -1,0 +1,5 @@
+# Copy this to .dev.vars for local development
+# These are dummy values - real AI binding only works when deployed
+
+# For local dev, the AI binding won't work, so we'll return mock responses
+# Deploy to Cloudflare to use real Llama 3.3 AI

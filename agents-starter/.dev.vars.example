@@ -1,0 +1,3 @@
+OPENAI_API_KEY=sk-proj-1234567890
+# Optional - AI Gateway URL for custom AI providers
+# GATEWAY_BASE_URL=https://your-gateway-url.com/v1/..
