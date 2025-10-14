@@ -1,126 +1,44 @@
 #!/bin/bash
 
-# 🚀 Transmoda Production Deployment Script
-# This script builds and deploys all components for production
+# Production deployment script for Transmoda
+set -e
 
-set -e  # Exit on any error
+echo "🚀 Starting production deployment..."
 
-echo "🚀 Starting Transmoda Production Deployment..."
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+    echo "❌ Wrangler CLI not found. Please install it first:"
+    echo "npm install -g wrangler"
+    exit 1
+fi
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Function to print colored output
-print_status() {
-    echo -e "${GREEN}✅ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
-# Check if required tools are installed
-check_dependencies() {
-    print_status "Checking dependencies..."
-    
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js is not installed"
-        exit 1
-    fi
-    
-    if ! command -v npm &> /dev/null; then
-        print_error "npm is not installed"
-        exit 1
-    fi
-    
-    if ! command -v wrangler &> /dev/null; then
-        print_warning "Wrangler CLI not found. Install with: npm install -g wrangler"
-    fi
-    
-    print_status "Dependencies check complete"
-}
-
-# Build web application
-build_web() {
-    print_status "Building web application..."
-    cd web
-    
-    # Install dependencies
-    npm ci --only=production
-    
-    # Build for production
-    npm run build
-    
-    print_status "Web application built successfully"
-    cd ..
-}
-
-# Build agents starter
-build_agents() {
-    print_status "Building agents starter..."
-    cd agents-starter
-    
-    # Install dependencies
-    npm ci --only=production
-    
-    # Build for production
-    npm run build
-    
-    print_status "Agents starter built successfully"
-    cd ..
-}
+# Check if we're in the right directory
+if [ ! -f "worker/wrangler.toml" ]; then
+    echo "❌ Please run this script from the project root directory"
+    exit 1
+fi
 
 # Deploy worker
-deploy_worker() {
-    print_status "Deploying Cloudflare Worker..."
-    cd worker
-    
-    # Check if wrangler is authenticated
-    if ! wrangler whoami &> /dev/null; then
-        print_warning "Please authenticate with Wrangler first: wrangler login"
-        return 1
-    fi
-    
-    # Deploy worker to production environment
-    wrangler deploy --env=production
-    
-    print_status "Worker deployed successfully to production"
-    cd ..
-}
+echo "📦 Deploying Cloudflare Worker..."
+cd worker
+npx wrangler deploy --env production
+cd ..
 
-# Main deployment function
-main() {
-    echo "🔍 Pre-deployment checks..."
-    check_dependencies
-    
-    echo "🏗️  Building applications..."
-    build_web
-    build_agents
-    
-    echo "🚀 Deploying to production..."
-    deploy_worker
-    
-    echo ""
-    print_status "🎉 Production deployment complete!"
-    echo ""
-    echo "📋 Next steps:"
-    echo "1. Set up environment variables in your deployment platform"
-    echo "2. Configure monitoring and error tracking"
-    echo "3. Test all functionality in production"
-    echo "4. Set up SSL certificates if needed"
-    echo ""
-    echo "🔗 Useful commands:"
-    echo "• Web app: cd web && npm start"
-    echo "• Agents: cd agents-starter && npm start"
-    echo "• Worker logs: cd worker && wrangler tail"
-}
+# Build and deploy web app (if using Cloudflare Pages)
+echo "🌐 Building web application..."
+cd web
+npm run build
+cd ..
 
-# Run main function
-main "$@"
+echo "✅ Production deployment complete!"
+echo ""
+echo "🔧 Next steps:"
+echo "1. Set up your environment variables in Cloudflare Workers dashboard"
+echo "2. Configure your domain in Cloudflare Pages"
+echo "3. Test all functionality in production"
+echo ""
+echo "📋 Required environment variables:"
+echo "- GEMINI_API_KEY: Your Google Gemini API key"
+echo "- PROMPT_SUMMARY: AI prompt for document summarization"
+echo "- PROMPT_SHORTFORM: AI prompt for shortform content generation"
+echo "- ALLOWED_ORIGINS: Comma-separated list of allowed origins (optional)"

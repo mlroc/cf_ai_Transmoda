@@ -1,4 +1,6 @@
 // Define types for PDF.js to avoid any usage
+import { config } from './config';
+
 const MAX_LENGTH = 200_000;
 
 interface PdfJsLib {
@@ -35,8 +37,8 @@ const loadPdfJs = async (): Promise<PdfJsLib> => {
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const pdfjsLib: PdfJsLib = await import(/* webpackIgnore: true */ 'https://unpkg.com/pdfjs-dist@5.4.149/build/pdf.mjs');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@5.4.149/build/pdf.worker.mjs';
+    const pdfjsLib: PdfJsLib = await import(/* webpackIgnore: true */ `${config.pdfjs.cdn}/pdfjs-dist@${config.pdfjs.version}/build/pdf.mjs`);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `${config.pdfjs.cdn}/pdfjs-dist@${config.pdfjs.version}/build/pdf.worker.mjs`;
     window.pdfjsLib = pdfjsLib;
     return pdfjsLib;
   } catch {

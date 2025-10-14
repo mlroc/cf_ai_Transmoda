@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { config } from "@/lib/config";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://transmoda.com",
+    url: config.app.url,
     title: "Transmoda — AI PDF Content Creator",
     description: "Transform your PDFs into engaging social media content with AI-powered analysis.",
     siteName: "Transmoda",

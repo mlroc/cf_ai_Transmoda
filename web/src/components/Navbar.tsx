@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { 
   Menu, 
   X, 
-  FileText, 
-  Zap, 
   Users
 } from "lucide-react";
 
@@ -16,16 +14,6 @@ const navItems = [
     name: "About Me",
     href: "#about",
     icon: Users,
-  },
-  {
-    name: "Features",
-    href: "#features",
-    icon: Zap,
-  },
-  {
-    name: "Contact",
-    href: "#about",
-    icon: FileText,
   },
 ];
 

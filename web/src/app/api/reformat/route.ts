@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
+import { config } from "@/lib/config";
 
 export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const upstreamUrl = "https://transmoda-worker.uravgpcuser.workers.dev/reformat?sid=web";
+    const upstreamUrl = `${config.api.baseUrl}${config.api.endpoints.reformat}?sid=web`;
     const res = await fetch(upstreamUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

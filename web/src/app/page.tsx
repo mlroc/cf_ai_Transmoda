@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { extractTextFromPdf } from "@/lib/pdf";
 import ShortformContent from "@/components/ShortformContent";
+import { config } from "@/lib/config";
 
 // Component to format LLM text with better styling
 function FormattedSummary({ text }: { text: string }) {
@@ -200,7 +201,7 @@ export default function Transmoda() {
         if (typeof window === "undefined") return reject(new Error("window not available"));
         if ((window as { jspdf?: { jsPDF?: unknown } }).jspdf?.jsPDF) return resolve();
         const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+        script.src = `${config.pdfjs.jsdelivr}/npm/jspdf@2.5.1/dist/jspdf.umd.min.js`;
         script.async = true;
         script.onload = () => resolve();
         script.onerror = () => reject(new Error("Failed to load jsPDF"));
@@ -464,7 +465,7 @@ export default function Transmoda() {
         const text = await extractTextFromPdf(file);
         setProgress(60);
 
-        res = await fetch("https://transmoda-worker.uravgpcuser.workers.dev/summarize-pdf-text", {
+        res = await fetch(`${config.api.baseUrl}${config.api.endpoints.summarizePdfText}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, mode: selectedMode })
@@ -476,7 +477,7 @@ export default function Transmoda() {
         formData.append("file", file);
         formData.append("mode", selectedMode);
         setProgress(50);
-        res = await fetch("https://transmoda-worker.uravgpcuser.workers.dev/summarize", {
+        res = await fetch(`${config.api.baseUrl}${config.api.endpoints.summarize}`, {
           method: "POST",
           body: formData,
         });
@@ -534,7 +535,7 @@ export default function Transmoda() {
 
       if (isPdf) {
         const text = await extractTextFromPdf(file);
-        res = await fetch("https://transmoda-worker.uravgpcuser.workers.dev/summarize-pdf-text", {
+        res = await fetch(`${config.api.baseUrl}${config.api.endpoints.summarizePdfText}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, mode: "shortform" })
@@ -544,7 +545,7 @@ export default function Transmoda() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("mode", "shortform");
-        res = await fetch("https://transmoda-worker.uravgpcuser.workers.dev/summarize", {
+        res = await fetch(`${config.api.baseUrl}${config.api.endpoints.summarize}`, {
           method: "POST",
           body: formData,
         });
@@ -794,11 +795,25 @@ export default function Transmoda() {
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             Transform PDFs into
             <br />
-            <span className="text-primary">AI Summaries</span>
+            <span className="text-primary">Viral Content</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Upload any PDF document and get comprehensive, structured summaries powered by advanced AI.
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Upload any PDF document and instantly generate engaging shortform content ideas for TikTok, Instagram, and YouTube Shorts.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-primary mb-1">$480B</div>
+              <div className="text-sm text-muted-foreground">Creator Economy by 2027</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-primary mb-1">50M+</div>
+              <div className="text-sm text-muted-foreground">Global Creators</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-primary mb-1">10x</div>
+              <div className="text-sm text-muted-foreground">Faster Content Creation</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1016,19 +1031,70 @@ export default function Transmoda() {
       </div>
 
 
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-muted/30">
+      {/* How It Works Section */}
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Powering the <span className="text-primary">$480B Creator Economy</span><sup className="text-sm text-muted-foreground">1</sup>
+              How <span className="text-primary">Transmoda</span> Works
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              According to Goldman Sachs Research, the creator economy is projected to reach nearly half a trillion dollars by 2027<sup className="text-sm text-muted-foreground">1</sup>. 
-              Transmoda helps creators capitalize on this massive opportunity.
+              Transform any PDF into viral content in three simple steps
             </p>
           </div>
 
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">1. Upload PDF</h3>
+              <p className="text-muted-foreground">
+                Drag and drop any PDF document or text file. Our AI processes it instantly.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">2. AI Analysis</h3>
+              <p className="text-muted-foreground">
+                Advanced AI extracts key insights and generates structured summaries.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-9 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 4a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">3. Generate Content</h3>
+              <p className="text-muted-foreground">
+                Get viral content ideas with titles, voiceovers, hashtags, and key points.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Creator Economy Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Join the <span className="text-primary">$480B Creator Economy</span><sup className="text-sm text-muted-foreground">1</sup>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              According to Goldman Sachs Research, the creator economy is projected to reach nearly half a trillion dollars by 2027<sup className="text-sm text-muted-foreground">1</sup>. 
+              Don&apos;t miss out on this massive opportunity.
+            </p>
+          </div>
 
           {/* Key Statistics Cards */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -1050,100 +1116,158 @@ export default function Transmoda() {
             </div>
           </div>
 
-          {/* Creator Economy Insights */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-foreground mb-6">Why Creators Need AI-Powered Content</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-primary font-bold">1</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Scale Content Production</h4>
-                    <p className="text-muted-foreground text-sm">
-                      With 50M creators competing for attention, AI helps you produce more high-quality content faster.
-                    </p>
-                  </div>
+          {/* Why Creators Need AI */}
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-foreground mb-8 text-center">Why Creators Need AI-Powered Content</h3>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <span className="text-primary font-bold text-lg">1</span>
                 </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-primary font-bold">2</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Diversify Revenue Streams</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Create multiple content formats from one source to maximize your 70% brand deal revenue.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-primary font-bold">3</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Beat the Competition</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Only 4% of creators are professionals earning $100K+. AI gives you the edge to join them.
-                    </p>
-                  </div>
-                </div>
+                <h4 className="font-semibold text-foreground text-lg">Scale Production</h4>
+                <p className="text-muted-foreground text-sm">
+                  With 50M creators competing for attention, AI helps you produce more high-quality content faster.
+                </p>
               </div>
-            </div>
 
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-foreground mb-6">The Six Key Enablers</h3>
-              <p className="text-muted-foreground mb-6">
-                Goldman Sachs identifies six critical factors for creator economy success. 
-                Transmoda addresses the core need for <strong>effective content creation tools</strong>.
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-foreground mb-1">Scale</div>
-                  <div className="text-xs text-muted-foreground">Global reach</div>
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <span className="text-primary font-bold text-lg">2</span>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-foreground mb-1">Capital</div>
-                  <div className="text-xs text-muted-foreground">Funding access</div>
+                <h4 className="font-semibold text-foreground text-lg">Diversify Revenue</h4>
+                <p className="text-muted-foreground text-sm">
+                  Create multiple content formats from one source to maximize your 70% brand deal revenue.
+                </p>
+              </div>
+
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <span className="text-primary font-bold text-lg">3</span>
                 </div>
-                <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-                  <div className="text-sm font-semibold text-primary mb-1">AI Tools</div>
-                  <div className="text-xs text-primary/80">Content creation</div>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-foreground mb-1">Monetization</div>
-                  <div className="text-xs text-muted-foreground">Revenue streams</div>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-foreground mb-1">Analytics</div>
-                  <div className="text-xs text-muted-foreground">Data insights</div>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-foreground mb-1">E-commerce</div>
-                  <div className="text-xs text-muted-foreground">Shopping integration</div>
-                </div>
+                <h4 className="font-semibold text-foreground text-lg">Beat Competition</h4>
+                <p className="text-muted-foreground text-sm">
+                  Only 4% of creators are professionals earning $100K+. AI gives you the edge to join them.
+                </p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Call to Action */}
-          <div className="text-center mt-16">
-            <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-2xl p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-foreground mb-4">
-                Ready to Join the Creator Economy Revolution?
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Transform any PDF into viral content ideas and position yourself for success in the $480B creator economy.
+      {/* Key Features Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose <span className="text-primary">Transmoda</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Built for creators who want to scale their content production and maximize engagement
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Lightning Fast</h3>
+              <p className="text-muted-foreground">
+                Process any PDF in seconds with our advanced AI technology. No waiting, no delays.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-9 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 4a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Viral Content Ideas</h3>
+              <p className="text-muted-foreground">
+                Get ready-to-use content ideas with titles, voiceovers, hashtags, and key points.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Interactive Editing</h3>
+              <p className="text-muted-foreground">
+                Chat with AI to refine and customize your content ideas in real-time.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Secure & Private</h3>
+              <p className="text-muted-foreground">
+                Your documents are processed securely and never stored permanently.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Easy Export</h3>
+              <p className="text-muted-foreground">
+                Download your content ideas as PDF or TXT files for easy sharing and editing.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">Platform Optimized</h3>
+              <p className="text-muted-foreground">
+                Content ideas tailored for TikTok, Instagram Reels, YouTube Shorts, and more.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-2xl p-12 max-w-4xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Ready to Transform Your PDFs into Viral Content?
+              </h2>
+              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Join thousands of creators who are already using Transmoda to scale their content production and maximize their reach in the $480B creator economy.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-14 px-8 text-lg font-semibold"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
                   Start Creating Now
                 </Button>
-                <Button variant="outline" size="lg">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="h-14 px-8 text-lg font-semibold"
+                  onClick={() => window.open(config.urls.goldmanSachs, '_blank')}
+                >
                   Learn More
                 </Button>
               </div>
@@ -1192,7 +1316,7 @@ export default function Transmoda() {
                   </a>
                   
                   <a 
-                    href="https://www.linkedin.com/in/liumichael04/" 
+                    href={config.urls.linkedin} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 p-4 bg-muted hover:bg-muted/80 rounded-xl transition-colors group"
@@ -1204,7 +1328,7 @@ export default function Transmoda() {
                   </a>
                   
                   <a 
-                    href="https://mlroc.github.io/" 
+                    href={config.urls.personalWebsite} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 p-4 bg-muted hover:bg-muted/80 rounded-xl transition-colors group"
@@ -1236,12 +1360,12 @@ export default function Transmoda() {
                     <em>Goldman Sachs Insights</em>, April 19, 2023.
                   </p>
                   <a 
-                    href="https://www.goldmansachs.com/insights/articles/the-creator-economy-could-approach-half-a-trillion-dollars-by-2027" 
+                    href={config.urls.goldmanSachs} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary hover:text-primary/80 underline"
                   >
-                    https://www.goldmansachs.com/insights/articles/the-creator-economy-could-approach-half-a-trillion-dollars-by-2027
+                    {config.urls.goldmanSachs}
                   </a>
                   <p className="mt-2 text-xs">
                     <strong>Key findings cited:</strong> $480B projected market size by 2027, 50M global creators, 

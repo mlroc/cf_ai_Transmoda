@@ -56,11 +56,11 @@ const parseContentIntoCards = (content: string): Array<{
     lines.forEach(line => {
       // Handle various formats: *Title:, Title:, *Title, etc.
       const patterns = {
-        title: /^\*?Title:?\s*(.+)$/i,
-        description: /^\*?Description:?\s*(.+)$/i,
-        voiceover: /^\*?Voiceover:?\s*(.+)$/i,
-        hashtags: /^\*?Hashtags?:?\s*(.+)$/i,
-        keyPoints: /^\*?Key\s*Points?:?\s*(.+)$/i
+        title: /^\*{0,2}Title:\*{0,2}\s*(.+)$/i,
+        description: /^\*{0,2}Description:\*{0,2}\s*(.+)$/i,
+        voiceover: /^\*{0,2}Voiceover:\*{0,2}\s*(.+)$/i,
+        hashtags: /^\*{0,2}Hashtags?:\*{0,2}\s*(.+)$/i,
+        keyPoints: /^\*{0,2}Key\s*Points?:\*{0,2}\s*(.+)$/i
       } as const;
       
       Object.entries(patterns).forEach(([key, pattern]) => {
@@ -161,6 +161,23 @@ export class TransSession implements DurableObject {
       // Get prompts from environment variables
       const promptSummary = this.env.PROMPT_SUMMARY;
       const promptShortform = this.env.PROMPT_SHORTFORM;
+      
+      if (!promptSummary || !promptShortform) {
+        const origin = resolveAllowedOrigin(request, this.env);
+        return new Response(JSON.stringify({ error: "AI prompts not configured. Please contact support." }), { 
+          status: 500, 
+          headers: securityHeaders(origin, { "content-type": "application/json" }) 
+        });
+      }
+
+      // Check if API key is configured
+      if (!this.env.GEMINI_API_KEY) {
+        const origin = resolveAllowedOrigin(request, this.env);
+        return new Response(JSON.stringify({ error: "AI service not configured. Please contact support." }), { 
+          status: 500, 
+          headers: securityHeaders(origin, { "content-type": "application/json" }) 
+        });
+      }
 
       // Google Gemini API
       const model = "gemini-2.0-flash-exp";
@@ -648,7 +665,14 @@ ${reinforcement}`;
           });
         }
 
-        const prompt = `Summarize the document in ONE concise paragraph (3-5 sentences) in GitHub-Flavored Markdown. No bullets, no headings, no citations like [1].\n\n${text}`;
+        const promptSummary = this.env.PROMPT_SUMMARY;
+        if (!promptSummary) {
+          return new Response(JSON.stringify({ error: "AI prompts not configured. Please contact support." }), { 
+            status: 500, 
+            headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" } 
+          });
+        }
+        const prompt = `${promptSummary}\n\n${text}`;
         
         // Generating summary with Gemini
         
@@ -770,6 +794,15 @@ ${reinforcement}`;
       const promptSummary = this.env.PROMPT_SUMMARY;
       const promptShortform = this.env.PROMPT_SHORTFORM;
       
+      
+      if (!promptSummary || !promptShortform) {
+        const origin = resolveAllowedOrigin(request, this.env);
+        return new Response(JSON.stringify({ error: "AI prompts not configured. Please contact support." }), { 
+          status: 500, 
+          headers: securityHeaders(origin, { "content-type": "application/json" }) 
+        });
+      }
+      
       try {
         // Starting PDF text processing
         
@@ -788,10 +821,10 @@ ${reinforcement}`;
           body: JSON.stringify({
             contents,
             generationConfig: mode === "shortform" ? {
-              temperature: 0.7,
-              topP: 0.8,
+              temperature: 0.8,
+              topP: 0.9,
               topK: 40,
-              maxOutputTokens: 1200,
+              maxOutputTokens: 2048,
             } : {
               temperature: 0.35,
               topP: 0.95,
@@ -823,38 +856,23 @@ ${reinforcement}`;
             headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
           });
         } else {
-          // Gemini API error
-          const errorBody = await geminiResponse.text();
-          // Fallback: quick heuristic summary or shortform scaffold
-          const quickSummary = (() => {
-            const cleaned = String(text).replace(/\s+/g, ' ').trim();
-            const sentences = cleaned.split(/(?<=[.!?])\s+/).slice(0, 5);
-            const out = sentences.join(' ');
-            return out.length > 120 ? out : cleaned.slice(0, 600);
-          })();
-          const shortformFallback = `# Shortform Content Ideas\n\n*Title: Quick Idea 1\n*Description: Turn a key insight from the document into a bold, high-contrast claim.\n*Voiceover: Open with a curiosity gap, then deliver one clear, punchy takeaway.\n*Hashtags: #Ideas #Creator #Learning\n*Key Points: Hooks, fast pacing, single takeaway.\n\n***\n\n*Title: Quick Idea 2\n*Description: Contrast myth vs. fact from the text and resolve with proof.\n*Voiceover: Pose the myth, pause, then reveal the surprising reality.\n*Hashtags: #Truth #MythBusting #Explain\n*Key Points: Myth, reveal, proof.\n\n***\n\n*Title: Quick Idea 3\n*Description: Showcase a before/after transformation enabled by the core concept.\n*Voiceover: Paint the pain, then the fast win in 10 seconds.\n*Hashtags: #BeforeAfter #Tips #HowTo\n*Key Points: Pain, switch, outcome.`;
-          const fallback = String(mode).toLowerCase() === 'shortform' ? shortformFallback : quickSummary;
-          
-          // Parse content into cards if it's shortform mode
-          if (String(mode).toLowerCase() === 'shortform') {
-            const cards = parseContentIntoCards(fallback);
-            return new Response(JSON.stringify({ cards, fallback: true }), {
-              headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
-            });
-          }
-          
-          return new Response(JSON.stringify({ summary: fallback, fallback: true }), {
-            headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+          // Gemini API error - return user-friendly error
+          const origin = resolveAllowedOrigin(request, this.env);
+          return new Response(JSON.stringify({ 
+            error: "AI service temporarily unavailable. Please try again later." 
+          }), {
+            status: 503,
+            headers: securityHeaders(origin, { "content-type": "application/json" })
           });
         }
       } catch (e) {
-        // Error in summarize-pdf-text
-        // Last-resort fallback to ensure UX continuity
-        const cleaned = String(text).replace(/\s+/g, ' ').trim();
-        const sentences = cleaned.split(/(?<=[.!?])\s+/).slice(0, 4);
-        const quick = sentences.join(' ') || cleaned.slice(0, 600) || 'Unable to summarize this document right now.';
-        return new Response(JSON.stringify({ summary: quick, fallback: true }), {
-          headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+        // Error in summarize-pdf-text - return user-friendly error
+        const origin = resolveAllowedOrigin(request, this.env);
+        return new Response(JSON.stringify({ 
+          error: "Unable to process document. Please try again later." 
+        }), {
+          status: 500,
+          headers: securityHeaders(origin, { "content-type": "application/json" })
         });
       }
     }
@@ -897,6 +915,15 @@ export default {
         const promptSummary = env.PROMPT_SUMMARY;
         const promptShortform = env.PROMPT_SHORTFORM;
         
+        
+        if (!promptSummary || !promptShortform) {
+          const origin = resolveAllowedOrigin(request, env);
+          return new Response(JSON.stringify({ error: "AI prompts not configured. Please contact support." }), { 
+            status: 500, 
+            headers: securityHeaders(origin, { "content-type": "application/json" }) 
+          });
+        }
+        
         try {
           // Processing PDF text
           
@@ -907,7 +934,9 @@ export default {
             ]
           }];
 
-          const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`, {
+          const apiKey = env.GEMINI_API_KEY?.trim();
+          
+          const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -968,21 +997,13 @@ export default {
             });
           }
         } catch (e) {
-          // Error in summarize-pdf-text
-          const cleaned = String(text).replace(/\s+/g, ' ').trim();
-          const sentences = cleaned.split(/(?<=[.!?])\s+/).slice(0, 4);
-          const quick = sentences.join(' ') || cleaned.slice(0, 600) || 'Unable to summarize this document right now.';
-          
-          // Parse content into cards if it's shortform mode
-          if (mode === "shortform") {
-            const cards = parseContentIntoCards(quick);
-            return new Response(JSON.stringify({ cards, fallback: true }), {
-              headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
-            });
-          }
-          
-          return new Response(JSON.stringify({ summary: quick, fallback: true }), {
-            headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+          // Error in summarize-pdf-text - return user-friendly error
+          const origin = resolveAllowedOrigin(request, env);
+          return new Response(JSON.stringify({ 
+            error: "Unable to process document. Please try again later." 
+          }), {
+            status: 500,
+            headers: securityHeaders(origin, { "content-type": "application/json" })
           });
         }
       } catch (parseError) {
@@ -1028,53 +1049,12 @@ export default {
 
     if (url.pathname === "/test") {
       const origin = resolveAllowedOrigin(request, env);
-      return new Response(JSON.stringify({ status: "ok" }), { headers: securityHeaders(origin, { "content-type": "application/json" }) });
-    }
-
-    if (url.pathname === "/test-gemini") {
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${env.GEMINI_API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: "Hello, say 'API test successful'" }] }]
-          })
-        });
-        
-        const data = await response.json();
-        return new Response(JSON.stringify({ 
-          status: response.status,
-          success: response.ok,
-          data: data
-        }), {
-          headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
-        });
-      } catch (error) {
-        return new Response(JSON.stringify({ 
-          error: error instanceof Error ? error.message : String(error)
-        }), {
-          headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
-        });
-      }
-    }
-
-    if (url.pathname === "/test-file") {
-      const form = await request.formData();
-      const file = form.get("file");
-      if (file instanceof File) {
-        return new Response(JSON.stringify({ 
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size
-        }), {
-          headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "No file provided" }), {
-        status: 400,
-        headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+      return new Response(JSON.stringify({ status: "ok" }), { 
+        headers: securityHeaders(origin, { "content-type": "application/json" }) 
       });
     }
+
+
 
     if (url.pathname === "/summarize-text") {
       const sessionId = url.searchParams.get("sid") || "anon";

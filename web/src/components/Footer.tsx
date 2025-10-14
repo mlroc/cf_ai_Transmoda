@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { config } from "@/lib/config";
 import { 
   Github, 
   Linkedin, 
@@ -31,9 +32,9 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/in/liumichael04/", icon: Linkedin },
-  { name: "GitHub", href: "https://github.com/mlroc", icon: Github },
-  { name: "Personal Website", href: "https://mlroc.github.io/", icon: Globe },
+  { name: "LinkedIn", href: config.urls.linkedin, icon: Linkedin },
+  { name: "GitHub", href: config.urls.github, icon: Github },
+  { name: "Personal Website", href: config.urls.personalWebsite, icon: Globe },
 ];
 
 const features = [

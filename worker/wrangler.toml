@@ -1,6 +1,7 @@
 name = "transmoda-worker"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["formdata_parser_supports_files"]
 
 # Environment variables
 # You need to set these using: wrangler secret put <VARIABLE_NAME>
@@ -10,6 +11,10 @@ compatibility_date = "2024-01-01"
 # - GEMINI_API_KEY: Your Google Gemini API key
 # - PROMPT_SUMMARY: AI prompt for document summarization
 # - PROMPT_SHORTFORM: AI prompt for shortform content generation
+#
+# Example prompts:
+# PROMPT_SUMMARY: "Summarize the document in ONE concise paragraph (3-5 sentences) in GitHub-Flavored Markdown. No bullets, no headings, no citations like [1]."
+# PROMPT_SHORTFORM: "Create 5 viral shortform content ideas from this document for TikTok, Instagram Reels, and YouTube Shorts. Each idea should have a compelling title, engaging voiceover script, and relevant hashtags. Use the format: *Title: [title] *Voiceover: [script] *Hashtags: [tags] separated by ***"
 
 # Durable Objects
 [[durable_objects.bindings]]
